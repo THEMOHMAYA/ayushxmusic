@@ -11,7 +11,7 @@ git()
 dbb()
 heroku()
 
-app = Dil()
+app = Aayu()
 userbot = Userbot()
 
 from .platforms import *
