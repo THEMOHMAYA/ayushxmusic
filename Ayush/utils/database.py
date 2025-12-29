@@ -1,8 +1,8 @@
 import random
 from typing import Dict, List, Union
 
-from AarohiX import userbot
-from AarohiX.core.mongo import mongodb
+from Ayush import userbot
+from Ayush.core.mongo import mongodb
 
 authdb = mongodb.adminauth
 authuserdb = mongodb.authuser
@@ -79,7 +79,7 @@ async def set_assistant_new(chat_id, number):
 
 
 async def set_assistant(chat_id):
-    from AarohiX.core.userbot import assistants
+    from Ayush.core.userbot import assistants
 
     ran_assistant = random.choice(assistants)
     assistantdict[chat_id] = ran_assistant
@@ -93,7 +93,7 @@ async def set_assistant(chat_id):
 
 
 async def get_assistant(chat_id: int) -> str:
-    from AarohiX.core.userbot import assistants
+    from Ayush.core.userbot import assistants
 
     assistant = assistantdict.get(chat_id)
     if not assistant:
@@ -120,7 +120,7 @@ async def get_assistant(chat_id: int) -> str:
 
 
 async def set_calls_assistant(chat_id):
-    from AarohiX.core.userbot import assistants
+    from Ayush.core.userbot import assistants
 
     ran_assistant = random.choice(assistants)
     assistantdict[chat_id] = ran_assistant
@@ -133,7 +133,7 @@ async def set_calls_assistant(chat_id):
 
 
 async def group_assistant(self, chat_id: int) -> int:
-    from AarohiX.core.userbot import assistants
+    from Ayush.core.userbot import assistants
 
     assistant = assistantdict.get(chat_id)
     if not assistant:
@@ -716,3 +716,4 @@ async def set_queries(mode: int):
     return await queriesdb.update_one(
         {"chat_id": chat_id}, {"$set": {"mode": mode}}, upsert=True
     )        
+
