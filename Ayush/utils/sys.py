@@ -2,8 +2,8 @@ import time
 
 import psutil
 
-from ShrutixMusic.misc import _boot_
-from ShrutixMusic.utils.formatters import get_readable_time
+from Ayush.misc import _boot_
+from Ayush.utils.formatters import get_readable_time
 
 
 async def bot_sys_stats():
