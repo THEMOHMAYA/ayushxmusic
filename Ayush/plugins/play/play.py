@@ -21,7 +21,7 @@ from Ayush.utils.inline import (
     track_markup,
 )
 from Ayush.utils.logger import play_logs
-from Ayush import stream
+from Ayush.utils.stream.stream import stream
 from config import BANNED_USERS, lyrical
 
 
@@ -670,4 +670,5 @@ async def slider_queries(client, CallbackQuery, _):
         return await CallbackQuery.edit_message_media(
             media=med, reply_markup=InlineKeyboardMarkup(buttons)
         )
+
 
