@@ -4,7 +4,7 @@ from pyrogram import filters
 from pyrogram.types import Message
 
 from Ayush import app
-from Ayush.core.call import Aayu
+from Ayush.core.call import call_py
 from Ayush.utils import bot_sys_stats
 from Ayush.utils.decorators.language import language
 from Ayush.utils.inline import supp_markup
@@ -22,7 +22,7 @@ async def ping_com(client, message: Message, _):
     )
 
     try:
-        pytgping = await Aayu.ping()
+        pytgping = await call_py.ping()
     except:
         pytgping = "N/A"
 
@@ -30,6 +30,14 @@ async def ping_com(client, message: Message, _):
     resp = (datetime.now() - start).microseconds / 1000
 
     await response.edit_text(
-        _["ping_2"].format(resp, app.mention, UP, RAM, CPU, DISK, pytgping),
+        _["ping_2"].format(
+            resp,
+            app.mention,
+            UP,
+            RAM,
+            CPU,
+            DISK,
+            pytgping,
+        ),
         reply_markup=supp_markup(_),
     )
