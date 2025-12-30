@@ -36,11 +36,11 @@ async def ping_com(client, message: Message, _):
 
         photo=PING_IMG_URL,
 
-        caption=_["ping_1"].format(nand.mention),
+        caption=_["ping_1"].format(app.mention),
 
     )
 
-    pytgping = await Shruti.ping()
+    pytgping = await Aayu.ping()
 
     UP, CPU, RAM, DISK = await bot_sys_stats()
 
