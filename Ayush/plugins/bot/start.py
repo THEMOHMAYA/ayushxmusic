@@ -82,7 +82,7 @@ async def start_pm(client, message: Message, _):
 
             if await is_on_off(2):
 
-                return await nand.send_message(
+                return await app.send_message(
 
                     chat_id=config.LOGGER_ID,
 
