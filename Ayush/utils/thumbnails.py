@@ -7,7 +7,6 @@ from PIL import Image, ImageDraw, ImageEnhance, ImageFilter, ImageFont
 from unidecode import unidecode
 
 from config import YOUTUBE_IMG_URL
-from Ayush.core.listeners import get_listeners
 
 # try import (safe)
 try:
