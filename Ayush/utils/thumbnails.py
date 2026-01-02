@@ -83,97 +83,118 @@ async def get_thumb(videoid):
         time_font = ImageFont.truetype("Ayush/assets/font2.ttf", 24)
 
         # ---------- BIGGER PLAYER CARD ----------
-        card_width = 1080
-        card_height = 380
+card_width = 1120
+card_height = 420
+card_x = 80
+card_y = 170
 
-        card = Image.new("RGBA", (card_width, card_height), (35, 35, 35, 200))
-        mask = Image.new("L", card.size, 0)
-        ImageDraw.Draw(mask).rounded_rectangle(
-            (0, 0, card_width, card_height),
-            radius=55,
-            fill=255
-        )
-        bg.paste(card, (100, 190), mask)
+card = Image.new("RGBA", (card_width, card_height), (35, 35, 35, 210))
+mask = Image.new("L", card.size, 0)
+ImageDraw.Draw(mask).rounded_rectangle(
+    (0, 0, card_width, card_height),
+    radius=60,
+    fill=255
+)
+bg.paste(card, (card_x, card_y), mask)
 
-        # ---------- ALBUM IMAGE ----------
-        album = yt.resize((245, 245))
-        amask = Image.new("L", album.size, 0)
-        ImageDraw.Draw(amask).rounded_rectangle(
-            (0, 0, 240, 240),
-            radius=30,
-            fill=255
-        )
-        bg.paste(album, (140, 250), amask)
+# ---------- ALBUM IMAGE (BIGGER) ----------
+album_size = 270
+album = yt.resize((album_size, album_size))
+amask = Image.new("L", album.size, 0)
+ImageDraw.Draw(amask).rounded_rectangle(
+    (0, 0, album_size, album_size),
+    radius=35,
+    fill=255
+)
+album_x = card_x + 40
+album_y = card_y + 75
+bg.paste(album, (album_x, album_y), amask)
 
-        # ---------- TEXT AREA ----------
-        x = 420
-        max_text_width = 620
+# ---------- TEXT AREA ----------
+x = album_x + album_size + 40
+max_text_width = 680
 
-        title_text = fit_text(
-            draw,
-            clean_title(title),
-            title_font,
-            max_text_width
-        )
+# TITLE 
+title_text = fit_text(
+    draw,
+    clean_title(title),
+    title_font,
+    max_text_width
+)
+title_lines = title_text.split("\n")[:2]
+title_text = "\n".join(title_lines)
 
-        draw.multiline_text(
-            (x, 250),
-            title_text,
-            font=title_font,
-            fill="white",
-            spacing=6
-        )
+draw.multiline_text(
+    (x, card_y + 80),
+    title_text,
+    font=title_font,
+    fill="white",
+    spacing=6
+)
 
-        draw.text(
-            (x, 320),
-            channel,
-            font=artist_font,
-            fill=(200, 200, 200)
-        )
+# ----------- DYNAMIC Y ---------------
+title_height = draw.multiline_textbbox(
+    (x, card_y + 80),
+    title_text,
+    font=title_font,
+    spacing=6
+)[3]
 
-        draw.text(
-            (x, 355),
-            "AYUSH MUSIC • PLAYING",
-            font=bot_font,
-            fill=(150, 150, 150)
-        )
+artist_y = title_height + 10
 
-        # ---------- PROGRESS BAR ----------
-        bar_y = 430
-        bar_x1 = x
-        bar_x2 = x + max_text_width
+# ARTIST NAME 
+draw.text(
+    (x, artist_y),
+    channel,
+    font=artist_font,
+    fill=(210, 210, 210)
+)
 
-        draw.line(
-            (bar_x1, bar_y, bar_x2, bar_y),
-            fill=(100, 100, 100),
-            width=4
-        )
+# AYUSH MUSIC • PLAYING
+draw.text(
+    (x, artist_y + 32),
+    "AYUSH MUSIC • PLAYING",
+    font=bot_font,
+    fill=(160, 160, 160)
+)
 
-        progress_x = bar_x1 + 220
-        draw.line(
-            (bar_x1, bar_y, progress_x, bar_y),
-            fill=(90, 170, 255),
-            width=4
-        )
+# ---------- PROGRESS BAR ------------
+bar_y = card_y + card_height - 65
+bar_x1 = x
+bar_x2 = x + max_text_width
 
-        draw.ellipse(
-            (progress_x - 5, bar_y - 5, progress_x + 5, bar_y + 5),
-            fill="white"
-        )
+draw.line(
+    (bar_x1, bar_y, bar_x2, bar_y),
+    fill=(110, 110, 110),
+    width=4
+)
 
-        draw.text(
-            (bar_x1 - 45, bar_y + 10),
-            "00:00",
-            font=time_font,
-            fill="white"
-        )
+progress_x = bar_x1 + int(max_text_width * 0.35)
+draw.line(
+    (bar_x1, bar_y, progress_x, bar_y),
+    fill=(90, 170, 255),
+    width=4
+)
 
-        draw.text(
-            (bar_x2 + 10, bar_y + 10),
-            duration,
-            font=time_font,
-            fill="white"
-        )
+draw.ellipse(
+    (progress_x - 6, bar_y - 6, progress_x + 6, bar_y + 6),
+    fill="white"
+)
+
+# TIME (SAFE – NO OVERLAP)
+draw.text(
+    (bar_x1 - 55, bar_y + 12),
+    "00:00",
+    font=time_font,
+    fill="white"
+)
+
+draw.text(
+    (bar_x2 + 12, bar_y + 12),
+    duration,
+    font=time_font,
+    fill="white"
+)
 
         # ---------- SAVE ----------
         bg.save(f"cache/{videoid}.png")
