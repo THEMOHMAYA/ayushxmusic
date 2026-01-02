@@ -114,7 +114,7 @@ async def get_thumb(videoid):
         )
 
         draw.text(
-            (x, 350),
+            (x, 345),
             "AYUSH MUSIC • PLAYING",
             font=bot_font,
             fill=(160, 160, 160),
