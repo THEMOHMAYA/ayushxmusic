@@ -140,12 +140,20 @@ async def get_thumb(videoid):
 
         draw = ImageDraw.Draw(bg)
 
-        fonts = (
-            ImageFont.truetype("Ayush/assets/font.ttf", 44),
-            ImageFont.truetype("Ayush/assets/font2.ttf", 30),
-            ImageFont.truetype("Ayush/assets/font2.ttf", 26),
-            ImageFont.truetype("Ayush/assets/font2.ttf", 24),
-        )
+        def title_font_auto(title):
+    size = 42
+    if len(title) > 35:
+        size = 36
+    if len(title) > 55:
+        size = 30
+    return ImageFont.truetype("Ayush/assets/font.ttf", size)
+
+fonts = (
+    title_font_auto(title),
+    ImageFont.truetype("Ayush/assets/font2.ttf", 30),
+    ImageFont.truetype("Ayush/assets/font2.ttf", 26),
+    ImageFont.truetype("Ayush/assets/font2.ttf", 24),
+)
 
         random.choice([
             design_one,
