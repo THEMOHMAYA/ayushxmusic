@@ -1,170 +1,164 @@
-import os
-import re
-import random
-import aiofiles
-import aiohttp
-
+import os, re, random, aiofiles, aiohttp
 from PIL import Image, ImageDraw, ImageEnhance, ImageFilter, ImageFont
 from py_yt import VideosSearch
 from config import YOUTUBE_IMG_URL
-from Ayush import app
 
+from Ayush import app
 
 
 def changeImageSize(maxWidth, maxHeight, image):
     ratio = max(maxWidth / image.size[0], maxHeight / image.size[1])
-    size = (int(image.size[0] * ratio), int(image.size[1] * ratio))
-    return image.resize(size, Image.LANCZOS)
+    return image.resize(
+        (int(image.size[0] * ratio), int(image.size[1] * ratio)),
+        Image.LANCZOS
+    )
 
 
 def clean_title(text):
     text = re.sub(r"\W+", " ", text)
-    title = ""
-    for i in text.split():
-        if len(title) + len(i) < 50:
-            title += " " + i
-    return title.strip()
+    out = ""
+    for w in text.split():
+        if len(out) + len(w) < 50:
+            out += " " + w
+    return out.strip()
 
 
 def fit_text(draw, text, font, max_width):
-    words = text.split()
-    line, result = "", ""
+    words, line, res = text.split(), "", ""
     for w in words:
         test = line + w + " "
         if draw.textlength(test, font=font) <= max_width:
             line = test
         else:
-            result += line.strip() + "\n"
+            res += line.strip() + "\n"
             line = w + " "
-    return result + line.strip()
+    return res + line.strip()
 
 
+# ================= DESIGN 1 =================
+def design_one(bg, yt, draw, title, artist, duration, fonts):
+    title_font, artist_font, bot_font, time_font = fonts
+
+    card = Image.new("RGBA", (1120, 420), (35, 35, 35, 210))
+    mask = Image.new("L", card.size, 0)
+    ImageDraw.Draw(mask).rounded_rectangle((0, 0, 1120, 420), 60, fill=255)
+    bg.paste(card, (80, 170), mask)
+
+    album = yt.resize((270, 270))
+    am = Image.new("L", album.size, 0)
+    ImageDraw.Draw(am).rounded_rectangle((0, 0, 270, 270), 35, fill=255)
+    bg.paste(album, (120, 235), am)
+
+    x = 420
+    draw.multiline_text((x, 240),
+        fit_text(draw, title, title_font, 650),
+        font=title_font, fill="white", spacing=6)
+
+    draw.text((x, 335), artist, font=artist_font, fill=(210, 210, 210))
+    draw.text((x, 360), "AYUSH MUSIC • PLAYING", font=bot_font, fill=(160, 160, 160))
+
+    bar_y = 415
+    draw.line((x+20, bar_y, x+630, bar_y), fill=(120,120,120), width=4)
+    draw.line((x+20, bar_y, x+260, bar_y), fill=(90,170,255), width=4)
+
+    draw.text((x+20, bar_y+12), "00:00", font=time_font, fill="white")
+    draw.text((x+580, bar_y+12), duration, font=time_font, fill="white")
+
+
+# ================= DESIGN 2 =================
+def design_two(bg, yt, draw, title, artist, duration, fonts):
+    title_font, artist_font, bot_font, time_font = fonts
+
+    album = yt.resize((320, 320))
+    bg.paste(album, (480, 150))
+
+    draw.text((360, 500), title[:40], font=title_font, fill="white")
+    draw.text((360, 545), artist, font=artist_font, fill=(200,200,200))
+    draw.text((360, 575), "AYUSH MUSIC • PLAYING", font=bot_font, fill=(160,160,160))
+
+
+# ================= DESIGN 3 =================
+def design_three(bg, yt, draw, title, artist, duration, fonts):
+    title_font, artist_font, bot_font, time_font = fonts
+
+    card = Image.new("RGBA", (1280, 260), (0, 0, 0, 180))
+    bg.paste(card, (0, 460))
+
+    album = yt.resize((200, 200))
+    bg.paste(album, (40, 490))
+
+    draw.text((270, 500), title, font=title_font, fill="white")
+    draw.text((270, 550), artist, font=artist_font, fill=(200,200,200))
+    draw.text((270, 585), "AYUSH MUSIC • PLAYING", font=bot_font, fill=(150,150,150))
+
+
+# ================= DESIGN 4 =================
+def design_four(bg, yt, draw, title, artist, duration, fonts):
+    title_font, artist_font, bot_font, time_font = fonts
+
+    album = yt.resize((260,260))
+    bg.paste(album, (900, 230))
+
+    draw.text((120, 260), title, font=title_font, fill="white")
+    draw.text((120, 320), artist, font=artist_font, fill=(200,200,200))
+    draw.text((120, 350), "AYUSH MUSIC • PLAYING", font=bot_font, fill=(160,160,160))
+
+
+# ================= DESIGN 5 =================
+def design_five(bg, yt, draw, title, artist, duration, fonts):
+    title_font, artist_font, bot_font, time_font = fonts
+
+    draw.rectangle((200, 180, 1080, 540), fill=(30,30,30,200))
+    album = yt.resize((240,240))
+    bg.paste(album, (220, 230))
+
+    draw.text((500, 260), title, font=title_font, fill="white")
+    draw.text((500, 320), artist, font=artist_font, fill=(210,210,210))
+    draw.text((500, 350), "AYUSH MUSIC • PLAYING", font=bot_font, fill=(150,150,150))
+
+
+# ================= MAIN FUNCTION =================
 async def get_thumb(videoid):
-    if os.path.isfile(f"cache/{videoid}.png"):
-        return f"cache/{videoid}.png"
-
     try:
-        results = VideosSearch(f"https://www.youtube.com/watch?v={videoid}", limit=1)
-        data = (await results.next())["result"][0]
+        res = VideosSearch(f"https://www.youtube.com/watch?v={videoid}", limit=1)
+        data = (await res.next())["result"][0]
 
-        title = data.get("title", "Unknown Song")
+        title = clean_title(data["title"])
+        artist = data["channel"]["name"]
         duration = data.get("duration", "0:00")
-        channel = data.get("channel", {}).get("name", "Unknown Artist")
-        thumb_url = data["thumbnails"][0]["url"].split("?")[0]
+        thumb = data["thumbnails"][0]["url"].split("?")[0]
 
-        async with aiohttp.ClientSession() as session:
-            async with session.get(thumb_url) as resp:
-                async with aiofiles.open(f"cache/temp_{videoid}.png", "wb") as f:
-                    await f.write(await resp.read())
+        async with aiohttp.ClientSession() as s:
+            async with s.get(thumb) as r:
+                async with aiofiles.open("temp.png", "wb") as f:
+                    await f.write(await r.read())
 
-        yt = Image.open(f"cache/temp_{videoid}.png").convert("RGBA")
-
-        # ---------- BACKGROUND (SAME) ----------
+        yt = Image.open("temp.png").convert("RGBA")
         bg = changeImageSize(1280, 720, yt)
         bg = bg.filter(ImageFilter.GaussianBlur(22))
         bg = ImageEnhance.Brightness(bg).enhance(0.45)
 
         draw = ImageDraw.Draw(bg)
 
-        # ---------- FONTS ----------
-        title_font = ImageFont.truetype("Ayush/assets/font.ttf", 44)
-        artist_font = ImageFont.truetype("Ayush/assets/font2.ttf", 30)
-        bot_font = ImageFont.truetype("Ayush/assets/font2.ttf", 26)
-        time_font = ImageFont.truetype("Ayush/assets/font2.ttf", 24)
-
-        # ---------- RANDOM DESIGN ----------
-        design = random.randint(1, 5)
-
-        if design == 1:
-            card_x, card_y = 80, 170
-            album_x = 120
-            text_x = 420
-
-        elif design == 2:
-            card_x, card_y = 60, 150
-            album_x = 150
-            text_x = 460
-
-        elif design == 3:
-            card_x, card_y = 100, 190
-            album_x = 140
-            text_x = 450
-
-        elif design == 4:
-            card_x, card_y = 80, 200
-            album_x = 110
-            text_x = 410
-
-        else:  # design 5
-            card_x, card_y = 70, 180
-            album_x = 160
-            text_x = 480
-
-        # ---------- PLAYER CARD ----------
-        card_width, card_height = 1120, 420
-        card = Image.new("RGBA", (card_width, card_height), (35, 35, 35, 210))
-        mask = Image.new("L", (card_width, card_height), 0)
-        ImageDraw.Draw(mask).rounded_rectangle(
-            (0, 0, card_width, card_height), radius=60, fill=255
-        )
-        bg.paste(card, (card_x, card_y), mask)
-
-        # ---------- ALBUM ----------
-        album_size = 270
-        album = yt.resize((album_size, album_size))
-        amask = Image.new("L", (album_size, album_size), 0)
-        ImageDraw.Draw(amask).rounded_rectangle(
-            (0, 0, album_size, album_size), radius=35, fill=255
-        )
-        bg.paste(album, (album_x, card_y + 60), amask)
-
-        # ---------- TEXT ----------
-        max_text_width = 650
-
-        draw.multiline_text(
-            (text_x, card_y + 70),
-            fit_text(draw, clean_title(title), title_font, max_text_width),
-            font=title_font,
-            fill="white",
-            spacing=6,
+        fonts = (
+            ImageFont.truetype("Ayush/assets/font.ttf", 44),
+            ImageFont.truetype("Ayush/assets/font2.ttf", 30),
+            ImageFont.truetype("Ayush/assets/font2.ttf", 26),
+            ImageFont.truetype("Ayush/assets/font2.ttf", 24),
         )
 
-        draw.text(
-            (text_x, card_y + 155),
-            channel,
-            font=artist_font,
-            fill=(210, 210, 210),
-        )
-
-        draw.text(
-            (text_x, card_y + 185),
-            "AYUSH MUSIC • PLAYING",
-            font=bot_font,
-            fill=(160, 160, 160),
-        )
-
-        # ---------- PROGRESS ----------
-        bar_y = card_y + 245
-        bar_start = text_x + 10
-        bar_end = text_x + max_text_width - 10
-
-        draw.line((bar_start, bar_y, bar_end, bar_y), fill=(120, 120, 120), width=4)
-
-        progress_x = bar_start + 240
-        draw.line((bar_start, bar_y, progress_x, bar_y), fill=(90, 170, 255), width=4)
-
-        draw.ellipse(
-            (progress_x - 6, bar_y - 6, progress_x + 6, bar_y + 6),
-            fill="white",
-        )
-
-        draw.text((bar_start, bar_y + 12), "00:00", font=time_font, fill="white")
-        draw.text((bar_end - 40, bar_y + 12), duration, font=time_font, fill="white")
+        random.choice([
+            design_one,
+            design_two,
+            design_three,
+            design_four,
+            design_five
+        ])(bg, yt, draw, title, artist, duration, fonts)
 
         bg.save(f"cache/{videoid}.png")
-        os.remove(f"cache/temp_{videoid}.png")
+        os.remove("temp.png")
         return f"cache/{videoid}.png"
 
     except Exception as e:
-        print("Thumbnail error:", e)
+        print(e)
         return YOUTUBE_IMG_URL
