@@ -35,6 +35,16 @@ def fit_text(draw, text, font, max_width):
     return res + line.strip()
 
 
+# ================= FONT AUTO ADJUST FUNCTION =================
+def title_font_auto(title):
+    size = 42
+    if len(title) > 35:
+        size = 36
+    if len(title) > 55:
+        size = 30
+    return ImageFont.truetype("Ayush/assets/font.ttf", size)
+
+
 # ================= DESIGN 1 =================
 def design_one(bg, yt, draw, title, artist, duration, fonts):
     title_font, artist_font, bot_font, time_font = fonts
@@ -140,21 +150,15 @@ async def get_thumb(videoid):
 
         draw = ImageDraw.Draw(bg)
 
-        def title_font_auto(title):
-    size = 42
-    if len(title) > 35:
-        size = 36
-    if len(title) > 55:
-        size = 30
-    return ImageFont.truetype("Ayush/assets/font.ttf", size)
+        # ---------- FONTS ----------
+        fonts = (
+            title_font_auto(title),
+            ImageFont.truetype("Ayush/assets/font2.ttf", 30),
+            ImageFont.truetype("Ayush/assets/font2.ttf", 26),
+            ImageFont.truetype("Ayush/assets/font2.ttf", 24),
+        )
 
-fonts = (
-    title_font_auto(title),
-    ImageFont.truetype("Ayush/assets/font2.ttf", 30),
-    ImageFont.truetype("Ayush/assets/font2.ttf", 26),
-    ImageFont.truetype("Ayush/assets/font2.ttf", 24),
-)
-
+        # ---------- RANDOM DESIGN ----------
         random.choice([
             design_one,
             design_two,
@@ -163,10 +167,11 @@ fonts = (
             design_five
         ])(bg, yt, draw, title, artist, duration, fonts)
 
+        # ---------- SAVE ----------
         bg.save(f"cache/{videoid}.png")
         os.remove("temp.png")
         return f"cache/{videoid}.png"
 
     except Exception as e:
-        print(e)
+        print("Thumbnail error:", e)
         return YOUTUBE_IMG_URL
