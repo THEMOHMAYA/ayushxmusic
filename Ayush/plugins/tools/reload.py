@@ -10,7 +10,7 @@ import re
 from os import getenv
 from Ayush import app
 
-from Ayush.core.call import Dil
+from Ayush.core.call import Aayu
 
 from Ayush.misc import db
 
