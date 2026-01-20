@@ -35,71 +35,83 @@ def title_font_auto(title):
 
 # ================= NEON COLORS =================
 NEON_COLORS = [
-    (255, 70, 70),     # red
-    (255, 70, 200),    # pink
-    (70, 255, 170),    # green
-    (70, 170, 255),    # blue
-    (255, 220, 70),    # yellow
+    (255, 0, 180),   # pink
+    (0, 255, 200),   # green
+    (0, 160, 255),   # blue
+    (255, 220, 70),  # yellow
+    (255, 70, 70),   # red
 ]
 
 
 # ================= NEON DESIGN =================
-def neon_design(bg, yt, draw, title, artist, duration, fonts):
-    title_font, artist_font, bot_font, time_font = fonts
+def neon_design(bg, yt, title, artist, duration, views):
+    draw = ImageDraw.Draw(bg)
     neon = random.choice(NEON_COLORS)
 
     # ---- CENTER IMAGE ----
-    center = yt.resize((1000, 520))
-    bg.paste(center, (140, 80))
+    thumb = yt.resize((980, 500))
+    bg.paste(thumb, (150, 100))
 
     # ---- NEON BORDER ----
     overlay = Image.new("RGBA", bg.size, (0, 0, 0, 0))
     od = ImageDraw.Draw(overlay)
 
-    for i in range(10):
+    for i in range(12):
         od.rounded_rectangle(
-            (120-i, 60-i, 1160+i, 620+i),
-            radius=45,
-            outline=(*neon, 90 - i*8),
+            (120 - i, 70 - i, 1160 + i, 610 + i),
+            radius=40,
+            outline=(*neon, 90 - i * 6),
             width=3
         )
 
     bg.alpha_composite(overlay)
 
-    # ---- GLOW TEXT FUNCTION ----
-    def glow_text(x, y, text, font, color):
-        for i in range(1, 6):
-            draw.text((x+i, y), text, font=font, fill=(*color, 40))
-            draw.text((x-i, y), text, font=font, fill=(*color, 40))
-            draw.text((x, y+i), text, font=font, fill=(*color, 40))
-            draw.text((x, y-i), text, font=font, fill=(*color, 40))
-        draw.text((x, y), text, font=font, fill=color)
+    # ---- FONTS ----
+    title_font = title_font_auto(title)
+    artist_font = ImageFont.truetype("Ayush/assets/font2.ttf", 28)
+    bottom_font = ImageFont.truetype("Ayush/assets/font2.ttf", 24)
+    brand_font = ImageFont.truetype("Ayush/assets/font2.ttf", 26)
 
-    # ---- TITLE ----
-    glow_text(260, 340, title, title_font, neon)
-
-    # ---- ARTIST ----
+    # ---- TITLE (TOP RIGHT) ----
     draw.text(
-        (260, 400),
+        (1120, 45),
+        title,
+        font=title_font,
+        fill=(255, 255, 255),
+        anchor="ra"
+    )
+
+    # ---- ARTIST (UNDER TITLE) ----
+    draw.text(
+        (1120, 85),
         artist,
         font=artist_font,
-        fill=(230, 230, 230)
+        fill=(210, 210, 210),
+        anchor="ra"
     )
 
-    # ---- BRANDING ----
+    # ---- BRAND ----
     draw.text(
-        (980, 90),
+        (1120, 125),
         "AYUSH MUSIC",
-        font=bot_font,
-        fill=neon
+        font=brand_font,
+        fill=neon,
+        anchor="ra"
     )
 
-    # ---- PLAYER INFO ----
+    # ---- BOTTOM INFO ----
+    bottom_text = (
+        f"YouTube : {views} | "
+        f"Time : {duration} | "
+        f"Player : @Spotify_x_music_bot"
+    )
+
     draw.text(
-        (260, 610),
-        f"00:00  ●━━━━━━━━━━━  {duration}",
-        font=time_font,
-        fill=(220, 220, 220)
+        (640, 680),
+        bottom_text,
+        font=bottom_font,
+        fill=neon,
+        anchor="mm"
     )
 
 
@@ -112,6 +124,7 @@ async def get_thumb(videoid):
         title = clean_title(data["title"])
         artist = data["channel"]["name"]
         duration = data.get("duration", "0:00")
+        views = data.get("viewCount", {}).get("text", "0 views")
         thumb = data["thumbnails"][0]["url"].split("?")[0]
 
         async with aiohttp.ClientSession() as s:
@@ -122,23 +135,15 @@ async def get_thumb(videoid):
         yt = Image.open("temp.png").convert("RGBA")
 
         bg = changeImageSize(1280, 720, yt)
-        bg = bg.filter(ImageFilter.GaussianBlur(25))
+        bg = bg.filter(ImageFilter.GaussianBlur(28))
         bg = ImageEnhance.Brightness(bg).enhance(0.45)
 
-        draw = ImageDraw.Draw(bg)
+        neon_design(bg, yt, title, artist, duration, views)
 
-        fonts = (
-            title_font_auto(title),
-            ImageFont.truetype("Ayush/assets/font2.ttf", 32),
-            ImageFont.truetype("Ayush/assets/font2.ttf", 26),
-            ImageFont.truetype("Ayush/assets/font2.ttf", 24),
-        )
-
-        neon_design(bg, yt, draw, title, artist, duration, fonts)
-
-        bg.save(f"cache/{videoid}.png")
+        path = f"cache/{videoid}.png"
+        bg.save(path, quality=95)
         os.remove("temp.png")
-        return f"cache/{videoid}.png"
+        return path
 
     except Exception as e:
         print("Thumbnail error:", e)
