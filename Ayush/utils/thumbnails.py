@@ -1,10 +1,14 @@
-import os, re, random, aiofiles, aiohttp
+import os
+import re
+import random
+import aiofiles
+import aiohttp
+
 from PIL import Image, ImageDraw, ImageEnhance, ImageFilter, ImageFont
 from py_yt import VideosSearch
 from config import YOUTUBE_IMG_URL
 
 from Ayush import app
-
 
 # ================= UTILS =================
 def changeImageSize(maxWidth, maxHeight, image):
@@ -17,133 +21,129 @@ def changeImageSize(maxWidth, maxHeight, image):
 
 def clean_title(text):
     text = re.sub(r"\W+", " ", text)
-    out = ""
-    for w in text.split():
-        if len(out) + len(w) < 45:
-            out += " " + w
-    return out.strip()
-
-
-def title_font_auto(title):
-    size = 46
-    if len(title) > 28:
-        size = 40
-    if len(title) > 40:
-        size = 34
-    return ImageFont.truetype("Ayush/assets/font.ttf", size)
+    return text.strip()[:50]
 
 
 # ================= NEON COLORS =================
 NEON_COLORS = [
-    (255, 0, 180),   # pink
-    (0, 255, 200),   # green
-    (0, 160, 255),   # blue
-    (255, 220, 70),  # yellow
-    (255, 70, 70),   # red
+    ("#ff004f", "#ff2f7d"),  # red
+    ("#ff00c8", "#ff4ddb"),  # pink
+    ("#00ff99", "#4dffc3"),  # green
+    ("#00aaff", "#4dc3ff"),  # blue
+    ("#ffd000", "#ffe066"),  # yellow
 ]
-
-
-# ================= NEON DESIGN =================
-def neon_design(bg, yt, title, artist, duration, views):
-    draw = ImageDraw.Draw(bg)
-    neon = random.choice(NEON_COLORS)
-
-    # ---- CENTER IMAGE ----
-    thumb = yt.resize((980, 500))
-    bg.paste(thumb, (150, 100))
-
-    # ---- NEON BORDER ----
-    overlay = Image.new("RGBA", bg.size, (0, 0, 0, 0))
-    od = ImageDraw.Draw(overlay)
-
-    for i in range(12):
-        od.rounded_rectangle(
-            (120 - i, 70 - i, 1160 + i, 610 + i),
-            radius=40,
-            outline=(*neon, 90 - i * 6),
-            width=3
-        )
-
-    bg.alpha_composite(overlay)
-
-    # ---- FONTS ----
-    title_font = title_font_auto(title)
-    artist_font = ImageFont.truetype("Ayush/assets/font2.ttf", 28)
-    bottom_font = ImageFont.truetype("Ayush/assets/font2.ttf", 24)
-    brand_font = ImageFont.truetype("Ayush/assets/font2.ttf", 26)
-
-    # ---- TITLE (TOP RIGHT) ----
-    draw.text(
-        (1120, 45),
-        title,
-        font=title_font,
-        fill=(255, 255, 255),
-        anchor="ra"
-    )
-
-    # ---- ARTIST (UNDER TITLE) ----
-    draw.text(
-        (1120, 85),
-        artist,
-        font=artist_font,
-        fill=(210, 210, 210),
-        anchor="ra"
-    )
-
-    # ---- BRAND ----
-    draw.text(
-        (1120, 125),
-        "AYUSH MUSIC",
-        font=brand_font,
-        fill=neon,
-        anchor="ra"
-    )
-
-    # ---- BOTTOM INFO ----
-    bottom_text = (
-        f"YouTube : {views} | "
-        f"Time : {duration} | "
-        f"Player : @Spotify_x_music_bot"
-    )
-
-    draw.text(
-        (640, 680),
-        bottom_text,
-        font=bottom_font,
-        fill=neon,
-        anchor="mm"
-    )
 
 
 # ================= MAIN =================
 async def get_thumb(videoid):
+    if os.path.isfile(f"cache/{videoid}.png"):
+        return f"cache/{videoid}.png"
+
     try:
-        res = VideosSearch(f"https://www.youtube.com/watch?v={videoid}", limit=1)
-        data = (await res.next())["result"][0]
+        url = f"https://www.youtube.com/watch?v={videoid}"
+        results = VideosSearch(url, limit=1)
+        data = (await results.next())["result"][0]
 
         title = clean_title(data["title"])
-        artist = data["channel"]["name"]
         duration = data.get("duration", "0:00")
-        views = data.get("viewCount", {}).get("text", "0 views")
-        thumb = data["thumbnails"][0]["url"].split("?")[0]
+        views = data.get("viewCount", {}).get("short", "Unknown")
+        thumb_url = data["thumbnails"][0]["url"].split("?")[0]
 
+        # ---------- DOWNLOAD THUMB ----------
         async with aiohttp.ClientSession() as s:
-            async with s.get(thumb) as r:
+            async with s.get(thumb_url) as r:
                 async with aiofiles.open("temp.png", "wb") as f:
                     await f.write(await r.read())
 
         yt = Image.open("temp.png").convert("RGBA")
 
+        # ---------- BACKGROUND ----------
         bg = changeImageSize(1280, 720, yt)
-        bg = bg.filter(ImageFilter.GaussianBlur(28))
-        bg = ImageEnhance.Brightness(bg).enhance(0.45)
+        bg = bg.filter(ImageFilter.GaussianBlur(22))
+        bg = ImageEnhance.Brightness(bg).enhance(0.40)
 
-        neon_design(bg, yt, title, artist, duration, views)
+        draw = ImageDraw.Draw(bg)
 
-        path = f"cache/{videoid}.png"
-        bg.save(path, quality=95)
+        # ---------- RANDOM NEON ----------
+        glow_color, border_color = random.choice(NEON_COLORS)
+
+        # ---------- CENTER THUMB ----------
+        thumb_w, thumb_h = 840, 460
+        yt_thumb = yt.resize((thumb_w, thumb_h))
+
+        mask = Image.new("L", (thumb_w, thumb_h), 0)
+        ImageDraw.Draw(mask).rounded_rectangle(
+            (0, 0, thumb_w, thumb_h), radius=25, fill=255
+        )
+        yt_thumb.putalpha(mask)
+
+        x = (1280 - thumb_w) // 2
+        y = 160
+
+        # ---------- GLOW ----------
+        glow = Image.new("RGBA", bg.size, (0, 0, 0, 0))
+        gdraw = ImageDraw.Draw(glow)
+
+        gdraw.rounded_rectangle(
+            (x - 25, y - 25, x + thumb_w + 25, y + thumb_h + 25),
+            radius=35,
+            fill=glow_color,
+        )
+        glow = glow.filter(ImageFilter.GaussianBlur(35))
+        bg.alpha_composite(glow)
+
+        # ---------- BORDER ----------
+        border = Image.new("RGBA", bg.size, (0, 0, 0, 0))
+        bdraw = ImageDraw.Draw(border)
+        bdraw.rounded_rectangle(
+            (x - 6, y - 6, x + thumb_w + 6, y + thumb_h + 6),
+            radius=30,
+            outline=border_color,
+            width=6,
+        )
+        bg.alpha_composite(border)
+
+        bg.paste(yt_thumb, (x, y), yt_thumb)
+
+        # ---------- FONTS ----------
+        title_font = ImageFont.truetype("Ayush/assets/font.ttf", 46)
+        info_font = ImageFont.truetype("Ayush/assets/font2.ttf", 30)
+        watermark_font = ImageFont.truetype("Ayush/assets/font2.ttf", 24)
+
+        # ---------- TITLE (TOP RIGHT) ----------
+        title_w = draw.textlength(title, font=title_font)
+        draw.text(
+            (1280 - title_w - 40, 40),
+            title,
+            font=title_font,
+            fill="white",
+            stroke_width=2,
+            stroke_fill=border_color,
+        )
+
+        # ---------- BOTTOM INFO ----------
+        info_text = f"YouTube : {views} | Time : {duration} | Player : @Spotify_x_music_bot"
+        info_w = draw.textlength(info_text, font=info_font)
+
+        draw.text(
+            ((1280 - info_w) // 2, y + thumb_h + 40),
+            info_text,
+            font=info_font,
+            fill=border_color,
+        )
+
+        # ---------- WATERMARK ----------
+        draw.text(
+            (30, 30),
+            "AYUSH MUSIC",
+            font=watermark_font,
+            fill=border_color,
+        )
+
+        # ---------- SAVE ----------
+        bg.save(f"cache/{videoid}.png")
         os.remove("temp.png")
-        return path
+        return f"cache/{videoid}.png"
 
     except Exception as e:
         print("Thumbnail error:", e)
