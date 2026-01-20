@@ -6,6 +6,7 @@ from config import YOUTUBE_IMG_URL
 from Ayush import app
 
 
+# ================= UTILS =================
 def changeImageSize(maxWidth, maxHeight, image):
     ratio = max(maxWidth / image.size[0], maxHeight / image.size[1])
     return image.resize(
@@ -18,116 +19,91 @@ def clean_title(text):
     text = re.sub(r"\W+", " ", text)
     out = ""
     for w in text.split():
-        if len(out) + len(w) < 50:
+        if len(out) + len(w) < 45:
             out += " " + w
     return out.strip()
 
 
-def fit_text(draw, text, font, max_width):
-    words, line, res = text.split(), "", ""
-    for w in words:
-        test = line + w + " "
-        if draw.textlength(test, font=font) <= max_width:
-            line = test
-        else:
-            res += line.strip() + "\n"
-            line = w + " "
-    return res + line.strip()
-
-
-# ================= FONT AUTO ADJUST FUNCTION =================
 def title_font_auto(title):
-    size = 42
-    if len(title) > 35:
-        size = 36
-    if len(title) > 55:
-        size = 30
+    size = 46
+    if len(title) > 28:
+        size = 40
+    if len(title) > 40:
+        size = 34
     return ImageFont.truetype("Ayush/assets/font.ttf", size)
 
 
-# ================= DESIGN 1 =================
-def design_one(bg, yt, draw, title, artist, duration, fonts):
+# ================= NEON COLORS =================
+NEON_COLORS = [
+    (255, 70, 70),     # red
+    (255, 70, 200),    # pink
+    (70, 255, 170),    # green
+    (70, 170, 255),    # blue
+    (255, 220, 70),    # yellow
+]
+
+
+# ================= NEON DESIGN =================
+def neon_design(bg, yt, draw, title, artist, duration, fonts):
     title_font, artist_font, bot_font, time_font = fonts
+    neon = random.choice(NEON_COLORS)
 
-    card = Image.new("RGBA", (1120, 420), (35, 35, 35, 210))
-    mask = Image.new("L", card.size, 0)
-    ImageDraw.Draw(mask).rounded_rectangle((0, 0, 1120, 420), 60, fill=255)
-    bg.paste(card, (80, 170), mask)
+    # ---- CENTER IMAGE ----
+    center = yt.resize((1000, 520))
+    bg.paste(center, (140, 80))
 
-    album = yt.resize((270, 270))
-    am = Image.new("L", album.size, 0)
-    ImageDraw.Draw(am).rounded_rectangle((0, 0, 270, 270), 35, fill=255)
-    bg.paste(album, (120, 235), am)
+    # ---- NEON BORDER ----
+    overlay = Image.new("RGBA", bg.size, (0, 0, 0, 0))
+    od = ImageDraw.Draw(overlay)
 
-    x = 420
-    draw.multiline_text((x, 240),
-        fit_text(draw, title, title_font, 650),
-        font=title_font, fill="white", spacing=6)
+    for i in range(10):
+        od.rounded_rectangle(
+            (120-i, 60-i, 1160+i, 620+i),
+            radius=45,
+            outline=(*neon, 90 - i*8),
+            width=3
+        )
 
-    draw.text((x, 335), artist, font=artist_font, fill=(210, 210, 210))
-    draw.text((x, 360), "AYUSH MUSIC • PLAYING", font=bot_font, fill=(160, 160, 160))
+    bg.alpha_composite(overlay)
 
-    bar_y = 415
-    draw.line((x+20, bar_y, x+630, bar_y), fill=(120,120,120), width=4)
-    draw.line((x+20, bar_y, x+260, bar_y), fill=(90,170,255), width=4)
+    # ---- GLOW TEXT FUNCTION ----
+    def glow_text(x, y, text, font, color):
+        for i in range(1, 6):
+            draw.text((x+i, y), text, font=font, fill=(*color, 40))
+            draw.text((x-i, y), text, font=font, fill=(*color, 40))
+            draw.text((x, y+i), text, font=font, fill=(*color, 40))
+            draw.text((x, y-i), text, font=font, fill=(*color, 40))
+        draw.text((x, y), text, font=font, fill=color)
 
-    draw.text((x+20, bar_y+12), "00:00", font=time_font, fill="white")
-    draw.text((x+580, bar_y+12), duration, font=time_font, fill="white")
+    # ---- TITLE ----
+    glow_text(260, 340, title, title_font, neon)
 
+    # ---- ARTIST ----
+    draw.text(
+        (260, 400),
+        artist,
+        font=artist_font,
+        fill=(230, 230, 230)
+    )
 
-# ================= DESIGN 2 =================
-def design_two(bg, yt, draw, title, artist, duration, fonts):
-    title_font, artist_font, bot_font, time_font = fonts
+    # ---- BRANDING ----
+    draw.text(
+        (980, 90),
+        "AYUSH MUSIC",
+        font=bot_font,
+        fill=neon
+    )
 
-    album = yt.resize((320, 320))
-    bg.paste(album, (480, 150))
-
-    draw.text((360, 500), title[:40], font=title_font, fill="white")
-    draw.text((360, 545), artist, font=artist_font, fill=(200,200,200))
-    draw.text((360, 575), "AYUSH MUSIC • PLAYING", font=bot_font, fill=(160,160,160))
-
-
-# ================= DESIGN 3 =================
-def design_three(bg, yt, draw, title, artist, duration, fonts):
-    title_font, artist_font, bot_font, time_font = fonts
-
-    card = Image.new("RGBA", (1280, 260), (0, 0, 0, 180))
-    bg.paste(card, (0, 460))
-
-    album = yt.resize((200, 200))
-    bg.paste(album, (40, 490))
-
-    draw.text((270, 500), title, font=title_font, fill="white")
-    draw.text((270, 550), artist, font=artist_font, fill=(200,200,200))
-    draw.text((270, 585), "AYUSH MUSIC • PLAYING", font=bot_font, fill=(150,150,150))
-
-
-# ================= DESIGN 4 =================
-def design_four(bg, yt, draw, title, artist, duration, fonts):
-    title_font, artist_font, bot_font, time_font = fonts
-
-    album = yt.resize((260,260))
-    bg.paste(album, (900, 230))
-
-    draw.text((120, 260), title, font=title_font, fill="white")
-    draw.text((120, 320), artist, font=artist_font, fill=(200,200,200))
-    draw.text((120, 350), "AYUSH MUSIC • PLAYING", font=bot_font, fill=(160,160,160))
+    # ---- PLAYER INFO ----
+    draw.text(
+        (260, 610),
+        f"00:00  ●━━━━━━━━━━━  {duration}",
+        font=time_font,
+        fill=(220, 220, 220)
+    )
 
 
-# ================= DESIGN 5 =================
-def design_five(bg, yt, draw, title, artist, duration, fonts):
-    title_font, artist_font, bot_font, time_font = fonts
-
-    draw.rectangle((200, 180, 1080, 540), fill=(30,30,30,200))
-    album = yt.resize((240,240))
-    bg.paste(album, (220, 230))
-
-    draw.text((500, 260), title, font=title_font, fill="white")
-    draw.text((500, 320), artist, font=artist_font, fill=(210,210,210))
-    draw.text((500, 350), "AYUSH MUSIC • PLAYING", font=bot_font, fill=(150,150,150))
-
-
-# ================= MAIN FUNCTION =================
+# ================= MAIN =================
 async def get_thumb(videoid):
     try:
         res = VideosSearch(f"https://www.youtube.com/watch?v={videoid}", limit=1)
@@ -144,30 +120,22 @@ async def get_thumb(videoid):
                     await f.write(await r.read())
 
         yt = Image.open("temp.png").convert("RGBA")
+
         bg = changeImageSize(1280, 720, yt)
-        bg = bg.filter(ImageFilter.GaussianBlur(22))
+        bg = bg.filter(ImageFilter.GaussianBlur(25))
         bg = ImageEnhance.Brightness(bg).enhance(0.45)
 
         draw = ImageDraw.Draw(bg)
 
-        # ---------- FONTS ----------
         fonts = (
             title_font_auto(title),
-            ImageFont.truetype("Ayush/assets/font2.ttf", 30),
+            ImageFont.truetype("Ayush/assets/font2.ttf", 32),
             ImageFont.truetype("Ayush/assets/font2.ttf", 26),
             ImageFont.truetype("Ayush/assets/font2.ttf", 24),
         )
 
-        # ---------- RANDOM DESIGN ----------
-        random.choice([
-            design_one,
-            design_two,
-            design_three,
-            design_four,
-            design_five
-        ])(bg, yt, draw, title, artist, duration, fonts)
+        neon_design(bg, yt, draw, title, artist, duration, fonts)
 
-        # ---------- SAVE ----------
         bg.save(f"cache/{videoid}.png")
         os.remove("temp.png")
         return f"cache/{videoid}.png"
