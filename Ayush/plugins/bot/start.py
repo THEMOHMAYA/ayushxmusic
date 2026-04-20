@@ -122,7 +122,7 @@ async def start_pm(client, message: Message, _):
 
             searched_text = _["start_6"].format(
 
-                title, duration, views, published, channellink, channel, nand.mention
+                title, duration, views, published, channellink, channel, Ayush.mention
 
             )
 
