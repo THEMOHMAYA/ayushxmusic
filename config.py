@@ -7,11 +7,11 @@ from pyrogram import filters
 load_dotenv()
 
 
-API_ID = int(getenv("API_ID", ""))
+API_ID = int(getenv("API_ID", "36343658"))
 
-API_HASH = getenv("API_HASH", "")
+API_HASH = getenv("API_HASH", "c2d05eecc4a4cda62fdf3f660da04d02")
 
-BOT_TOKEN = getenv("BOT_TOKEN", "")
+BOT_TOKEN = getenv("BOT_TOKEN", "8708696814:AAHbr-RoHXqkZmf9G9l0RjCHat6yIVZFcUs")
 
 MONGO_DB_URI = getenv("MONGO_DB_URI", "")
 
@@ -23,7 +23,7 @@ SONG_DOWNLOAD_DURATION = int(
 
 LOGGER_ID = int(getenv("LOGGER_ID", ""))
 
-OWNER_ID = int(getenv("OWNER_ID", "5311223486"))
+OWNER_ID = int(getenv("OWNER_ID", "8759825027"))
 
 COMMAND_HANDLER = getenv("COMMAND_HANDLER", "! / .").split()
 
@@ -39,8 +39,7 @@ UPSTREAM_BRANCH = getenv("UPSTREAM_BRANCH", "main")
 GIT_TOKEN = getenv(
     "GIT_TOKEN", None
 )   
-SUPPORT_CHANNEL = getenv("SUPPORT_CHANNEL", "https://t.me/frozentools")
-SUPPORT_CHAT = getenv("SUPPORT_CHAT", "https://t.me/tmm_support_chat")
+SUPPORT_CHAT = getenv("SUPPORT_CHAT", "https://t.me/+ynIBq9QPdJhhZWMy")
 
 AUTO_LEAVING_ASSISTANT = bool(getenv("AUTO_LEAVING_ASSISTANT", False))
 AUTO_SUGGESTION_MODE = getenv("AUTO_SUGGESTION_MODE", "True")
