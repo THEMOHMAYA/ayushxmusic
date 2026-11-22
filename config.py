@@ -7,12 +7,12 @@ from pyrogram import filters
 load_dotenv()
 
 
-API_ID = int(getenv("API_ID", ""))
+API_ID = int(getenv("API_ID", "36307669"))
 
-API_HASH = getenv("API_HASH", "")
-
+API_HASH = getenv("API_HASH", "7c340516380b0afc20c28701b67bcab1")
+9207217728:AAHFQ3NLNTWPrqjzhvpWJnUxgCBls65DS9s
 BOT_TOKEN = getenv("BOT_TOKEN", "")
-
+mongodb+srv://ayushop:ayushop210@cluster0.gklnc.mongodb.net/"
 MONGO_DB_URI = getenv("MONGO_DB_URI", "")
 
 DURATION_LIMIT_MIN = int(getenv("DURATION_LIMIT", 54000))
@@ -23,7 +23,7 @@ SONG_DOWNLOAD_DURATION = int(
 
 LOGGER_ID = int(getenv("LOGGER_ID", ""))
 
-OWNER_ID = int(getenv("OWNER_ID", "5311223486"))
+OWNER_ID = int(getenv("OWNER_ID", "8403853709"))
 
 COMMAND_HANDLER = getenv("COMMAND_HANDLER", "! / .").split()
 
